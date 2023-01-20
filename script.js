@@ -29,6 +29,10 @@ const context = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// Create a Score:
+
+const socreEl = document.querySelector('#scoreEl')
+
 // Create a player:
 class Player {
     constructor(x, y, radius, color) {
@@ -176,7 +180,8 @@ function spawnEnemies() {
 }
 
 // Animation Frames
-let animationId
+let animationId;
+let score = 0;
 function animate() {
     animationId = requestAnimationFrame(animate);
 
@@ -248,6 +253,10 @@ function animate() {
                 //Shrinking enemies
                 if (enemy.radius - 10 > 8) {
 
+                    // Increase our score
+                    score += 100;
+                    socreEl.innerHTML = score;
+
                     //Using external libraly gsap:
                     gsap.to(enemy, {
                         radius: enemy.radius - 10
@@ -258,6 +267,11 @@ function animate() {
                         projectiles.splice(projectileIndex, 1)
                     }, 0)
                 } else {
+
+                    // Increase our score bonus for each kill
+                    score += 250;
+                    socreEl.innerHTML = score;
+
                     setTimeout(() => {
                         enemies.splice(index, 1)
                         projectiles.splice(projectileIndex, 1)
@@ -275,8 +289,8 @@ addEventListener('click', (Event) => {
     //console.log(projectiles);
     const angle = Math.atan2(Event.clientY - y, Event.clientX - x);
     const velocity = {
-        x: Math.cos(angle) * 5,
-        y: Math.sin(angle) * 5
+        x: Math.cos(angle) * 6,
+        y: Math.sin(angle) * 6
     }
     projectiles.push(
         new Projectile(x, y, 5, 'white', velocity)
