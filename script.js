@@ -18,6 +18,9 @@ Basic Game CheckLIst
 
 */
 
+// Check External Libraly 
+console.log(gsap)
+
 // Creating a Canvas that fills the entire browser window:
 
 const canvas = document.querySelector('canvas');
@@ -90,6 +93,39 @@ class Enemy {
         this.y += this.velocity.y; 
     }
 }
+// Creating Particles friction:
+const friction = 0.99;
+
+// Creating Particles
+class Particle {
+    constructor(x, y, radius, color, velocity) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.color = color;
+        this.velocity = velocity;
+        this.alpha = 1;
+    }
+
+    draw() {
+        //context.save();
+        //context.globalAlpha = this.alpha;
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        context.fillStyle = this.color;
+        context.fill();
+        context.restore;
+    }
+
+    update() {
+        this.draw();
+        this.velocity.x *= friction;
+        this.velocity.y *= friction;
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+        this.alpha -= 0.01;
+    }
+}
 
 
 // Placing the player in the center of the canvas:
@@ -97,13 +133,16 @@ const x = canvas.width / 2;
 const y = canvas.height / 2;
 
 // Setting the player parameters
-const player = new Player(x, y, 30, 'blue');
+const player = new Player(x, y, 15, 'white');
 
 // Shooting projectiles
-const projectiles = []
+const projectiles = [];
 
 // Spawning Enemies
 const enemies = [];
+
+// Spawning Particles
+const particles = [];
 
 function spawnEnemies() {
     setInterval( () => {
@@ -123,7 +162,8 @@ function spawnEnemies() {
             xx = Math.random() * canvas.width; 
         }
 
-        const color = 'green';
+        // Randomize enemy color.
+        const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
         const angle = Math.atan2(y - yy, x - xx);
         const velocity = {
         x: Math.cos(angle),
@@ -139,14 +179,39 @@ function spawnEnemies() {
 let animationId
 function animate() {
     animationId = requestAnimationFrame(animate);
-    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    //Painting the background
+    context.fillStyle = 'rgba(0, 0, 0, 0.1)'
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
     // Drawing the player:
     player.draw();
 
+    // Drawing particles:
+    particles.forEach((particle, index) => {
+
+        // removing particles of the screen:
+        if (particle.alpha <= 0) {
+            particles.splice(index, 1);
+        } else {
+            particle.update();
+        }
+        
+    })
+
     // Drawing projectiles
-    projectiles.forEach((projectile) => {
+    projectiles.forEach((projectile, index) => {
         projectile.update();
+
+        //Removing projectiles after they get out of the canvas
+        if (projectile.x + projectile.radius < 0 || 
+            projectile.x - projectile.radius > canvas.width ||
+            projectile.y + projectile.radius < 0 || 
+            projectile.y - projectile.radius > canvas.height) {
+            setTimeout(() => {
+                projectiles.splice(index, 1)
+            })
+        }
     })
     enemies.forEach((enemy, index) => {
         enemy.update();
@@ -164,31 +229,57 @@ function animate() {
         projectiles.forEach((projectile, projectileIndex) => {
             const dist = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y);
 
-            // Objects touch
+            // When projectiles touch enemy
             if (dist - enemy.radius - projectile.radius < 1) {
-                setTimeout(() => {
-                    enemies.splice(index, 1)
-                    projectiles.splice(projectileIndex, 1)
-                }, 0)
+
+                //Spreading particles
+                for (let i = 0; i < enemy.radius * 1.5; i++) {
+                   particles.push(new Particle(
+                    projectile.x, 
+                    projectile.y, 
+                    //Particle Size:
+                    Math.random() * 2, 
+                    //Particle Color:
+                    enemy.color, 
+                    //Particle Velocity:
+                    {x: (Math.random() - 0.5) * (Math.random() * 5), y: (Math.random() - 0.5) * (Math.random() * 5)} 
+                    ));   
+                }
+                //Shrinking enemies
+                if (enemy.radius - 10 > 8) {
+
+                    //Using external libraly gsap:
+                    gsap.to(enemy, {
+                        radius: enemy.radius - 10
+                    })
+                  
+                    //removing projectile:
+                    setTimeout(() => {
+                        projectiles.splice(projectileIndex, 1)
+                    }, 0)
+                } else {
+                    setTimeout(() => {
+                        enemies.splice(index, 1)
+                        projectiles.splice(projectileIndex, 1)
+                    }, 0)
+                }
+   
 
             }
         })
 
     })
-
-
-
-
 }
 
 addEventListener('click', (Event) => {
+    //console.log(projectiles);
     const angle = Math.atan2(Event.clientY - y, Event.clientX - x);
     const velocity = {
-        x: Math.cos(angle),
-        y: Math.sin(angle)
+        x: Math.cos(angle) * 5,
+        y: Math.sin(angle) * 5
     }
     projectiles.push(
-        new Projectile(x, y, 5, 'red', velocity)
+        new Projectile(x, y, 5, 'white', velocity)
     )
 })
 
