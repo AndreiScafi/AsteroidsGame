@@ -1,8 +1,17 @@
 body {
     margin: 0;
+    background-color: rgba(0, 0, 0);
 }
 
 span {
     font-size: 26px;
     font-weight: bolder;
+}
+
+#startMenu {
+    border-radius: 15px;
+}
+
+button {
+    border-radius: 10px;
 }

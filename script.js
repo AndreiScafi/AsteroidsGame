@@ -22,16 +22,23 @@ Basic Game CheckLIst
 console.log(gsap)
 
 // Creating a Canvas that fills the entire browser window:
-
 const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Create a Score:
+// Creating a Score:
+const scoreEl = document.querySelector('#scoreEl');
 
-const socreEl = document.querySelector('#scoreEl')
+// Creating a Start Game Button:
+const startGameBtn = document.querySelector('#startGameBtn');
+
+// Removing the Start Menu after starting the game:
+const modalEl = document.querySelector('#modalEl');
+
+// Creating a Score:
+const bigScoreEl = document.querySelector('#bigScoreEl');
 
 // Create a player:
 class Player {
@@ -137,16 +144,27 @@ const x = canvas.width / 2;
 const y = canvas.height / 2;
 
 // Setting the player parameters
-const player = new Player(x, y, 15, 'white');
+let player = new Player(x, y, 15, 'white');
 
 // Shooting projectiles
-const projectiles = [];
+let projectiles = [];
 
 // Spawning Enemies
-const enemies = [];
+let enemies = [];
 
 // Spawning Particles
-const particles = [];
+let particles = [];
+
+//Restart Game:
+function init() {
+    player = new Player(x, y, 15, 'white');
+    projectiles = [];
+    enemies = [];
+    particles = [];
+    score = 0;
+    scoreEl.innerHTML = score;
+    bigScoreEl.innerHTML = score;
+}
 
 function spawnEnemies() {
     setInterval( () => {
@@ -228,6 +246,8 @@ function animate() {
         if (dist - enemy.radius - player.radius < 1) {
             console.log('End Game')
             cancelAnimationFrame(animationId);
+            modalEl.style.display = 'flex';
+            bigScoreEl.innerHTML = score
         }
 
         //Killing Enemies
@@ -255,7 +275,7 @@ function animate() {
 
                     // Increase our score
                     score += 100;
-                    socreEl.innerHTML = score;
+                    scoreEl.innerHTML = score;
 
                     //Using external libraly gsap:
                     gsap.to(enemy, {
@@ -270,7 +290,7 @@ function animate() {
 
                     // Increase our score bonus for each kill
                     score += 250;
-                    socreEl.innerHTML = score;
+                    scoreEl.innerHTML = score;
 
                     setTimeout(() => {
                         enemies.splice(index, 1)
@@ -297,6 +317,14 @@ addEventListener('click', (Event) => {
     )
 })
 
-animate();
-spawnEnemies();
+//Start Game Menu:
+
+startGameBtn.addEventListener('click', () => {
+    init();
+    animate();
+    spawnEnemies();
+    modalEl.style.display = 'none';
+})
+
+
 
